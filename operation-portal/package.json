@@ -1,0 +1,16 @@
+{
+  "name": "wolfbeacon-operation-portal",
+  "version": "1.0.0",
+  "description": "WolfBeacon Operation Portal",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm -v"
+  },
+  "author": "Jun Zheng <me@jackzh.com> (https://junthehacker.com)",
+  "license": "MIT",
+  "dependencies": {
+    "aws-sdk": "^2.153.0",
+    "colors": "^1.1.2",
+    "slackbots": "^1.1.0"
+  }
+}
