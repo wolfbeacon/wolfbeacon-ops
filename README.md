@@ -1,2 +1,2 @@
-# wolfbeacon-ops
-Ops, CD and Deployment scripts 
+# WolfBeacon Ops
+WolfBeacon Operation Automation Software 

@@ -1,0 +1,9 @@
+[
+	{
+		"email": "example@example.com",
+		"permissions": [
+			"run-playbook",
+			"abort-task"
+		]
+	}
+]

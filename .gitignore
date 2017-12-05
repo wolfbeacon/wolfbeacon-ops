@@ -1,1 +1,4 @@
 .idea
+wolfbeacon-ops
+config/settings.json
+config/users.json
