@@ -3,3 +3,4 @@ wolfbeacon-ops
 config/settings.json
 config/users.json
 *.swp
+config/aws_credentials
