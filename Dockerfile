@@ -18,7 +18,7 @@ RUN mkdir wolfbeacon-ops
 WORKDIR wolfbeacon-ops
 COPY . .
 RUN ls
-RUN /usr/local/go/bin/go get "github.com/BeepBoopHQ/go-slackbot"
+RUN /usr/local/go/bin/go get "github.com/wolfbeacon/go-slackbot"
 RUN /usr/local/go/bin/go get -u "github.com/aws/aws-sdk-go"
 RUN /usr/local/go/bin/go get "github.com/robfig/cron"
 RUN /usr/local/go/bin/go get "github.com/satori/go.uuid"
