@@ -1,5 +1,5 @@
-# WolfBeacon Ops
-WolfBeacon Operation Automation Software
+# WolfBeacon Infrastructure Operations
+WolfBeacon's AWS Infrastructure Operations and Deployment Automation Service
 
 ## AWS Credentials
 
