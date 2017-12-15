@@ -9,6 +9,7 @@ services:
   - docker
 
 before_install:
+  - cp config/aws_credentials.example config/aws_credentials
   - docker build -t wolfbeacon-infra-ops .
 
 script:

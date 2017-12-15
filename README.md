@@ -1,7 +1,26 @@
 # WolfBeacon Infrastructure Operations
 WolfBeacon's AWS Infrastructure Operations and Deployment Automation Service
 
-## How to Build
+[![Build Status](https://travis-ci.org/wolfbeacon/wolfbeacon-infra-ops.svg?branch=list-projects)](https://travis-ci.org/wolfbeacon/wolfbeacon-infra-ops)
+
+## Build Natively Using Go
+
+First, make sure you have the repository in your `$GOPATH`.
+
+CD into the repository, and run the following commands:
+
+```
+go get ./...
+go build
+```
+
+After successful build, you should see a executable file called `wolfbeacon-infra-ops`.
+
+Then, configure `config/` folder so you have all the right configurations.
+
+Run `./wolfbeacon-infra-ops` to start the bot. If using Windows `./wolfbeacon-infra-ops.exe`.
+
+## Build Using Docker
 
 First you must add two JSON files to `config/` folder: `settings.json` and `users.json`, you can find examples named `xx.example.json`.
 
@@ -9,44 +28,26 @@ Then you have to add a file called `aws_credentials` to `config/` folder, simply
 
 To build, simply run `docker build -t <docker image name> .`
 
-## How to use Slack bot
+## Command List
 
-### Build
+To execute a command, you must direct metion the bot. (@ the bot at the beginning).
 
-`run build <project name>`
+### list projects
 
-For example: run build wolfbeacon-core-api
+Get a list of CodeBuild projects.
 
-After build compelete, a message will be sent to operations channel.
+### list builds
 
-`list builds`
+List last 5 builds.
 
-List all current builds.
+### list envs
 
-`delete build <build id>`
+List all enviroments.
 
-Delete a build.
+### run build {project name}
 
-### Projects / Enviroments
+Start a new build.
 
-`list projects`
+### rebuild env {project name} {env name}
 
-List all projects
-
-`list envs`
-
-List all enviroments
-
-`rebuild env <project name> <env name>`
-
-### Examples
-
-Rebuild a image
-
-![image](https://preview.ibb.co/cnfNxw/Screenshot_from_2017_12_06_01_38_51.png)
-
-List enviroments, and update one enviroment to latest app version
-
-<a href="https://ibb.co/jXoHxw"><img src="https://preview.ibb.co/cwYT4b/Screenshot_from_2017_12_06_01_41_28.png" alt="Screenshot_from_2017_12_06_01_41_28" border="0"></a>
-
-<a href="https://imgbb.com/"><img src="https://image.ibb.co/dx36qG/Screenshot_from_2017_12_06_01_42_36.png" alt="Screenshot_from_2017_12_06_01_42_36" border="0"></a>
+Update an enviroment to the latest version.
