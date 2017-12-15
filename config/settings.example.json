@@ -1,3 +1,5 @@
 {
-	"slack-key": "xoxb-xxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    "slack-key": "xoxb-xxxxxxxxxxxxxxxxxxxxxxxx",
+    "aws-region": "Your AWS Region",
+    "announce-channel": "Announcement Channel ID"
 }

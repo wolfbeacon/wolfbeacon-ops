@@ -16,12 +16,14 @@ import (
 	"strings"
 )
 
+// Configuration struct, this will be read from json config file
 type Configuration struct {
 	SlackKey  string `json:"slack-key"`
 	AWSRegion string `json:"aws-region"`
 	AnnounceChannel string `json:"announce-channel"`
 }
 
+// User struct, will be read from users.json file
 type User struct {
 	Email       string   `json:"email"`
 	Permissions []string `json:"permissions"`
@@ -58,13 +60,16 @@ var bot *slackbot.Bot
 var codeBuildBuilds []*codebuild.Build
 var elasticBeanstalkEnviroments []*elasticbeanstalk.EnvironmentDescription
 
-var firstBuildStatusLoad = true
-var firstEnviromentStatusLoad = true
+var firstBuildStatusLoad bool
+var firstEnviromentStatusLoad bool
 
 func main() {
 
 	codeBuildBuilds = make([]*codebuild.Build, 0)
 	elasticBeanstalkEnviroments = make([]*elasticbeanstalk.EnvironmentDescription, 0)
+
+	firstBuildStatusLoad = true
+	firstEnviromentStatusLoad = true
 
 	// Read configurations
 	file, _ := os.Open("./config/settings.json")
@@ -103,9 +108,9 @@ func main() {
 	c.AddFunc("*/10 * * * * *", CheckEnviromentsCronJob)
 	c.Start()
 
-	CheckBuildStatusCronJob()
-	CheckEnviromentsCronJob()
 
+	ReloadCodeBuildBuilds()
+	ReloadElasticBeanstalkEnviroments()
 
 	toMe.Hear("(?i)(hi|hello).*").MessageHandler(HelloHandler)
 	toMe.Hear("^help$").MessageHandler(HelpHandler)
@@ -113,6 +118,7 @@ func main() {
 	toMe.Hear("run build .*").MessageHandler(StartCodeBuildBuildHandler)
 	toMe.Hear("list envs").MessageHandler(ListElasticBeanstalkEnviromentsHandler)
 	toMe.Hear("rebuild env .*").MessageHandler(RebuildElasticBeanstalkEnviromentHandler)
+	toMe.Hear("list projects").MessageHandler(ListCodeBuildProjectsHandler)
 
 	bot.Run()
 
@@ -132,6 +138,38 @@ func HelpHandler(ctx context.Context, bot *slackbot.Bot, evt *slack.MessageEvent
 	bot.Reply(evt, msg, slackbot.WithTyping)
 }
 
+// list projects handler
+func ListCodeBuildProjectsHandler(ctx context.Context, bot *slackbot.Bot, evt *slack.MessageEvent){
+	sess, err := session.NewSession(&aws.Config{
+		Region: aws.String(config.AWSRegion)},
+	)
+	svc := codebuild.New(sess)
+	projects, err := svc.ListProjects(&codebuild.ListProjectsInput{SortOrder: aws.String("ASCENDING")})
+	if err != nil {
+		bot.Reply(evt, "Failed to list build projects.", slackbot.WithTyping)
+	}
+
+	var result string
+
+	for _, project := range projects.Projects {
+		result += *project + "\n"
+	}
+
+	attachment := slack.Attachment{
+		Color: "#1565C0",
+		Fallback: result,
+		Text: result,
+		Footer: "Data from AWS CodeBuild",
+	}
+
+	attachments := make([]slack.Attachment, 0)
+
+	attachments = append(attachments, attachment)
+
+	bot.ReplyWithAttachments(evt, attachments, slackbot.WithTyping)
+}
+
+// list builds handler, will only list last 5 builds
 func ListCodeBuildBuildsHandler(ctx context.Context, bot *slackbot.Bot, evt *slack.MessageEvent) {
 	attachments := make([]slack.Attachment, 0)
 
@@ -356,6 +394,7 @@ func ConstructElasticBeanstalkEnviromentAttachment(env *elasticbeanstalk.Environ
 	return result
 }
 
+// Cron job to check all CodeBuild jobs.
 func CheckBuildStatusCronJob() {
 
 	// Take a copy of old builds
@@ -368,35 +407,30 @@ func CheckBuildStatusCronJob() {
 
 	oldBuildFound := false
 
-	if(!firstBuildStatusLoad){
-		for _, newBuild := range codeBuildBuilds {
-			for _, oldBuild := range oldBuilds {
-				// We are comparing two same builds
-				if aws.StringValue(oldBuild.Id) == aws.StringValue(newBuild.Id) {
-					oldBuildFound = true
-					// If build status has changed
-					if aws.StringValue(oldBuild.BuildStatus) != aws.StringValue(newBuild.BuildStatus) {
-						attachments := make([]slack.Attachment, 0)
-						attachments = append(attachments, ConstructCodeBuildBuildAttachment(newBuild))
-						PostToChannelWithAttachments("Build status updated", attachments)
-					}
+	for _, newBuild := range codeBuildBuilds {
+		for _, oldBuild := range oldBuilds {
+			// We are comparing two same builds
+			if aws.StringValue(oldBuild.Id) == aws.StringValue(newBuild.Id) {
+				oldBuildFound = true
+				// If build status has changed
+				if aws.StringValue(oldBuild.BuildStatus) != aws.StringValue(newBuild.BuildStatus) {
+					attachments := make([]slack.Attachment, 0)
+					attachments = append(attachments, ConstructCodeBuildBuildAttachment(newBuild))
+					PostToChannelWithAttachments("Build status updated", attachments)
 				}
 			}
-			if !oldBuildFound {
-				// We have detected a new build job
-				attachments := make([]slack.Attachment, 0)
-				attachments = append(attachments, ConstructCodeBuildBuildAttachment(newBuild))
-				PostToChannelWithAttachments("New build job started ...", attachments)
-			}
-			oldBuildFound = false
 		}
+		if !oldBuildFound {
+			// We have detected a new build job
+			attachments := make([]slack.Attachment, 0)
+			attachments = append(attachments, ConstructCodeBuildBuildAttachment(newBuild))
+			PostToChannelWithAttachments("New build job started ...", attachments)
+		}
+		oldBuildFound = false
 	}
-
-
-
-	firstBuildStatusLoad = false
 }
 
+// Cron job to check elasticbeanstalk enviroments.
 func CheckEnviromentsCronJob(){
 
 	// Take a copy of old builds
@@ -409,29 +443,25 @@ func CheckEnviromentsCronJob(){
 
 	oldEnviromentFound := false
 
-	if(!firstEnviromentStatusLoad){
-		for _, newEnv := range elasticBeanstalkEnviroments {
-			for _, oldEnv := range oldEnviroments {
-				// We are comparing two same envs
-				if aws.StringValue(oldEnv.EnvironmentName) == aws.StringValue(newEnv.EnvironmentName) {
-					oldEnviromentFound = true
-					// If env status has changed
-					if aws.StringValue(oldEnv.Status) != aws.StringValue(newEnv.Status) {
-						attachments := make([]slack.Attachment, 0)
-						attachments = append(attachments, ConstructElasticBeanstalkEnviromentAttachment(newEnv, true))
-						PostToChannelWithAttachments("Enviroment status updated", attachments)
-					}
+	for _, newEnv := range elasticBeanstalkEnviroments {
+		for _, oldEnv := range oldEnviroments {
+			// We are comparing two same envs
+			if aws.StringValue(oldEnv.EnvironmentName) == aws.StringValue(newEnv.EnvironmentName) {
+				oldEnviromentFound = true
+				// If env status has changed
+				if aws.StringValue(oldEnv.Status) != aws.StringValue(newEnv.Status) {
+					attachments := make([]slack.Attachment, 0)
+					attachments = append(attachments, ConstructElasticBeanstalkEnviromentAttachment(newEnv, true))
+					PostToChannelWithAttachments("Enviroment status updated", attachments)
 				}
 			}
-			if !oldEnviromentFound {
-				// We have detected a new env
-				attachments := make([]slack.Attachment, 0)
-				attachments = append(attachments, ConstructElasticBeanstalkEnviromentAttachment(newEnv, true))
-				PostToChannelWithAttachments("New enviroment created ...", attachments)
-			}
-			oldEnviromentFound = false
 		}
+		if !oldEnviromentFound {
+			// We have detected a new env
+			attachments := make([]slack.Attachment, 0)
+			attachments = append(attachments, ConstructElasticBeanstalkEnviromentAttachment(newEnv, true))
+			PostToChannelWithAttachments("New enviroment created ...", attachments)
+		}
+		oldEnviromentFound = false
 	}
-
-	firstEnviromentStatusLoad = false
 }

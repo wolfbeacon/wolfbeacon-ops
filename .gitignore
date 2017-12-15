@@ -4,3 +4,5 @@ config/settings.json
 config/users.json
 *.swp
 config/aws_credentials
+wolfbeacon-infra-ops.exe
+wolfbeacon-infra-ops

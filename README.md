@@ -1,15 +1,13 @@
 # WolfBeacon Infrastructure Operations
 WolfBeacon's AWS Infrastructure Operations and Deployment Automation Service
 
-## AWS Credentials
+## How to Build
 
-You must add a file called `config/aws_credentials` before building Docker image.
+First you must add two JSON files to `config/` folder: `settings.json` and `users.json`, you can find examples named `xx.example.json`.
 
-```
-[default]
-aws_access_key_id=AWS_ACCESS_KEY
-aws_secret_access_key=AWS_SECRET_ACCESS_KEY
-```
+Then you have to add a file called `aws_credentials` to `config/` folder, simply duplicate `aws_credentials.example` and modify the content.
+
+To build, simply run `docker build -t <docker image name> .`
 
 ## How to use Slack bot
 
