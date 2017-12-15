@@ -1,54 +1,53 @@
 # WolfBeacon Infrastructure Operations
 WolfBeacon's AWS Infrastructure Operations and Deployment Automation Service
 
-## AWS Credentials
+[![Build Status](https://travis-ci.org/wolfbeacon/wolfbeacon-infra-ops.svg?branch=list-projects)](https://travis-ci.org/wolfbeacon/wolfbeacon-infra-ops)
 
-You must add a file called `config/aws_credentials` before building Docker image.
+## Build Natively Using Go
+
+First, make sure you have the repository in your `$GOPATH`.
+
+CD into the repository, and run the following commands:
 
 ```
-[default]
-aws_access_key_id=AWS_ACCESS_KEY
-aws_secret_access_key=AWS_SECRET_ACCESS_KEY
+go get ./...
+go build
 ```
 
-## How to use Slack bot
+After successful build, you should see a executable file called `wolfbeacon-infra-ops`.
 
-### Build
+Then, configure `config/` folder so you have all the right configurations.
 
-`run build <project name>`
+Run `./wolfbeacon-infra-ops` to start the bot. If using Windows `./wolfbeacon-infra-ops.exe`.
 
-For example: run build wolfbeacon-core-api
+## Build Using Docker
 
-After build compelete, a message will be sent to operations channel.
+First you must add two JSON files to `config/` folder: `settings.json` and `users.json`, you can find examples named `xx.example.json`.
 
-`list builds`
+Then you have to add a file called `aws_credentials` to `config/` folder, simply duplicate `aws_credentials.example` and modify the content.
 
-List all current builds.
+To build, simply run `docker build -t <docker image name> .`
 
-`delete build <build id>`
+## Command List
 
-Delete a build.
+To execute a command, you must direct metion the bot. (@ the bot at the beginning).
 
-### Projects / Enviroments
+### list projects
 
-`list projects`
+Get a list of CodeBuild projects.
 
-List all projects
+### list builds
 
-`list envs`
+List last 5 builds.
 
-List all enviroments
+### list envs
 
-`rebuild env <project name> <env name>`
+List all enviroments.
 
-### Examples
+### run build {project name}
 
-Rebuild a image
+Start a new build.
 
-![image](https://preview.ibb.co/cnfNxw/Screenshot_from_2017_12_06_01_38_51.png)
+### rebuild env {project name} {env name}
 
-List enviroments, and update one enviroment to latest app version
-
-<a href="https://ibb.co/jXoHxw"><img src="https://preview.ibb.co/cwYT4b/Screenshot_from_2017_12_06_01_41_28.png" alt="Screenshot_from_2017_12_06_01_41_28" border="0"></a>
-
-<a href="https://imgbb.com/"><img src="https://image.ibb.co/dx36qG/Screenshot_from_2017_12_06_01_42_36.png" alt="Screenshot_from_2017_12_06_01_42_36" border="0"></a>
+Update an enviroment to the latest version.

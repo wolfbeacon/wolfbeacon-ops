@@ -2,8 +2,8 @@
 	{
 		"email": "example@example.com",
 		"permissions": [
-			"run-playbook",
-			"abort-task"
+			"start-build",
+			"rebuild-env"
 		]
 	}
 ]

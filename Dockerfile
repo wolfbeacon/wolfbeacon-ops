@@ -8,6 +8,7 @@ RUN wget https://redirector.gvt1.com/edgedl/go/go1.9.2.linux-amd64.tar.gz
 RUN tar -C /usr/local -xzf go1.9.2.linux-amd64.tar.gz
 RUN mkdir go
 WORKDIR go
+ENV GOPATH /tmp/go
 RUN mkdir src
 WORKDIR src
 RUN mkdir github.com
@@ -17,11 +18,7 @@ WORKDIR wolfbeacon
 RUN mkdir wolfbeacon-ops
 WORKDIR wolfbeacon-ops
 COPY . .
-RUN ls
-RUN /usr/local/go/bin/go get "github.com/wolfbeacon/go-slackbot"
-RUN /usr/local/go/bin/go get -u "github.com/aws/aws-sdk-go"
-RUN /usr/local/go/bin/go get "github.com/robfig/cron"
-RUN /usr/local/go/bin/go get "github.com/satori/go.uuid"
+RUN /usr/local/go/bin/go get ./...
 RUN /usr/local/go/bin/go build
 
 
