@@ -16,31 +16,6 @@ import (
 	"strings"
 )
 
-// Configuration struct, this will be read from json config file
-type Configuration struct {
-	SlackKey  string `json:"slack-key"`
-	AWSRegion string `json:"aws-region"`
-	AnnounceChannel string `json:"announce-channel"`
-}
-
-// User struct, will be read from users.json file
-type User struct {
-	Email       string   `json:"email"`
-	Permissions []string `json:"permissions"`
-}
-
-type BuildStatuses map[string]string
-type EnvStatuses map[string]string
-
-func (u *User) Can(permission string) bool {
-	for _, p := range u.Permissions {
-		if permission == p {
-			return true
-		}
-	}
-	return false
-}
-
 // Will return User with no permimssion if not found
 func FindUser(email string) User {
 	for _, u := range users {
@@ -119,23 +94,10 @@ func main() {
 	toMe.Hear("list envs").MessageHandler(ListElasticBeanstalkEnviromentsHandler)
 	toMe.Hear("rebuild env .*").MessageHandler(RebuildElasticBeanstalkEnviromentHandler)
 	toMe.Hear("list projects").MessageHandler(ListCodeBuildProjectsHandler)
+	toMe.Hear("list buckets").MessageHandler(ListS3BucketsHandler)
 
 	bot.Run()
 
-}
-
-func HelloHandler(ctx context.Context, bot *slackbot.Bot, evt *slack.MessageEvent) {
-	bot.Reply(evt, "Hello! If you need help, type `help`.", slackbot.WithTyping)
-}
-
-func HelpHandler(ctx context.Context, bot *slackbot.Bot, evt *slack.MessageEvent) {
-	msg := `*Here are all the commands you can use:*
-	help - Display help message
-	list {playbooks | tasks} - List playbook or tasks currently running
-	run {playbook} <playbook-name> - Run playbook
-	me - Show detailed status about yourself
-	`
-	bot.Reply(evt, msg, slackbot.WithTyping)
 }
 
 // list projects handler
@@ -281,25 +243,25 @@ func PostToChannelWithAttachments(text string, attachments []slack.Attachment){
 	bot.Client.PostMessage(config.AnnounceChannel, text, params)
 }
 
-func ReloadCodeBuildBuilds() bool {
-	sess, err := session.NewSession(&aws.Config{
-		Region: aws.String(config.AWSRegion)},
-	)
-	svc := codebuild.New(sess)
-	names, err := svc.ListBuilds(&codebuild.ListBuildsInput{SortOrder: aws.String("ASCENDING")})
-	if err != nil {
-		return false
-	}
-	builds, err := svc.BatchGetBuilds(&codebuild.BatchGetBuildsInput{Ids: names.Ids})
+// func ReloadCodeBuildBuilds() bool {
+// 	sess, err := session.NewSession(&aws.Config{
+// 		Region: aws.String(config.AWSRegion)},
+// 	)
+// 	svc := codebuild.New(sess)
+// 	names, err := svc.ListBuilds(&codebuild.ListBuildsInput{SortOrder: aws.String("ASCENDING")})
+// 	if err != nil {
+// 		return false
+// 	}
+// 	builds, err := svc.BatchGetBuilds(&codebuild.BatchGetBuildsInput{Ids: names.Ids})
 	
-	if err != nil {
-		return false
-	}
+// 	if err != nil {
+// 		return false
+// 	}
 
-	codeBuildBuilds = builds.Builds
+// 	codeBuildBuilds = builds.Builds
 
-	return true
-}
+// 	return true
+// }
 
 func ReloadElasticBeanstalkEnviroments() bool {
 	sess, err := session.NewSession(&aws.Config{
